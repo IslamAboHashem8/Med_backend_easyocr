@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 module.exports = router;
 
 require('dotenv').config();
-console.log(process.env.MONGO_URI);
+// console.log(process.env.MONGO_URI);
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
