@@ -7,7 +7,7 @@ const path = require('path');
 const { readCSV } = require('../services/csvService');
 const { runOCR } = require('../services/ocrService');
 const { matchMedicines } = require('../services/medicineMatcher');
-// const fs = require("fs");
+
 // ==============================
 // Mock OCR (من CSV)
 // ==============================
@@ -45,8 +45,6 @@ router.post('/', upload.single('image'), async (req, res) => {
         // ✅ تشغيل الفنكشن صح
         const extractedText =
         await runOCR(req.file.path);
-        // console.log("OCR RESULT:");
-        // console.log(extractedText);
          console.log("================================");
          console.log("Upload Started");
          console.log("Image:", req.file.filename);
@@ -63,10 +61,6 @@ router.post('/', upload.single('image'), async (req, res) => {
                 console.log(`${index + 1}. ${m.drug_name}`);
             });
             
-        // if (fs.existsSync(req.file.path)) {
-        //      fs.unlinkSync(req.file.path);
-        // }
-
 
         if (!medicines.length) {
             return res.status(400).json({
