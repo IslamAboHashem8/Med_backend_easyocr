@@ -1,6 +1,7 @@
 node_modules/
 
-uploads/
+uploads/*
+!uploads/.gitkeep
 
 easyocr_env/
 .venv/
