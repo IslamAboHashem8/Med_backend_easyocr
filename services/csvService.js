@@ -1,14 +1,15 @@
 const fs = require("fs");
-const path = require("path");
 const csv = require("csv-parser");
 
-let medicinesCache = null;
+// cache منفصل لكل ملف
+const caches = {};
 
 function readCSV(csvPath) {
   return new Promise((resolve, reject) => {
 
-    if (medicinesCache) {
-      return resolve(medicinesCache);
+    // لو الملف ده اتحمل قبل كده، رجّع الـ cache بتاعه
+    if (caches[csvPath]) {
+      return resolve(caches[csvPath]);
     }
 
     const results = [];
@@ -17,9 +18,9 @@ function readCSV(csvPath) {
       .pipe(csv())
       .on("data", (row) => results.push(row))
       .on("end", () => {
-        medicinesCache = results;
-        console.log(`Medicine cache loaded: ${results.length} medicines`);
-        resolve(medicinesCache);
+        caches[csvPath] = results;
+        console.log(`Cache loaded: ${csvPath} (${results.length} rows)`);
+        resolve(caches[csvPath]);
       })
       .on("error", reject);
   });
