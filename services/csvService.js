@@ -1,7 +1,6 @@
 const fs = require("fs");
 const csv = require("csv-parser");
 
-// cache منفصل لكل ملف
 const caches = {};
 
 function readCSV(csvPath) {
