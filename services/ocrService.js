@@ -1,49 +1,37 @@
-const { spawn } = require("child_process");
+const axios = require("axios");
 const fs = require("fs");
+const FormData = require("form-data");
 
-function runOCR(imagePath) {
-  return new Promise((resolve, reject) => {
+const OCR_SERVER_URL = process.env.OCR_SERVER_URL;
 
-    // ✅ الإصلاح: spawn بدل exec — مفيش shell injection
-    const pythonCommand = process.platform === "win32" ? "python" : "python3";
-    const python = spawn(pythonCommand, ["python/ocr.py", imagePath]);
+async function runOCR(imagePath) {
+  try {
+    // جهّز الصورة عشان تبعتها للـ OCR Server
+    const form = new FormData();
+    form.append("image", fs.createReadStream(imagePath));
 
-    let result = "";
-    let errorOutput = "";
-
-    python.stdout.on("data", (data) => {
-      result += data.toString();
-    });
-
-    python.stderr.on("data", (data) => {
-      errorOutput += data.toString();
-    });
-
-    python.on("close", (code) => {
-
-      // ✅ احذف الصورة بعد الـ OCR فوراً
-      fs.unlink(imagePath, (err) => {
-        if (err) console.error("Failed to delete image:", err.message);
-        else console.log("Image deleted after OCR:", imagePath);
-      });
-
-      if (code !== 0) {
-        return reject(new Error(`OCR failed: ${errorOutput}`));
+    // بعت الصورة لـ FastAPI على Koyeb
+    const response = await axios.post(
+      `${OCR_SERVER_URL}/ocr`,
+      form,
+      {
+        headers: form.getHeaders(),
+        timeout: 60000 // دقيقة كاملة لأن الـ OCR بياخد وقت
       }
+    );
 
-      try {
-        const parsed = JSON.parse(result);
-        resolve(parsed);
-      } catch (e) {
-        reject(new Error("Failed to parse OCR output"));
-      }
-    });
+    // استخرج النصوص بس
+    const texts = response.data.texts.map(t => t.text);
+    console.log("OCR texts received:", texts);
+    return texts;
 
-    python.on("error", (err) => {
-      reject(new Error(`Failed to start Python: ${err.message}`));
-    });
-
-  });
+  } finally {
+    // امسح الصورة المحلية دايماً حتى لو حصل error
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+      console.log("Image deleted after OCR:", imagePath);
+    }
+  }
 }
 
 module.exports = { runOCR };
